@@ -1,12 +1,19 @@
-// client/src/components/Key.js
 import React from 'react';
 import './../App.css';
 
 function Key({ value, status = '', onClick, isLarge = false }) {
-  const handleClick = (event) => {
-    // Optional: Prevent default behavior if it causes issues (like double tap zoom)
-    // event.preventDefault();
+
+  // This function calls the parent's handler passed via the `onClick` prop
+  const triggerParentOnClick = () => {
     onClick(value);
+  };
+
+  // Specific handler for the touch event
+  const handleTouchStart = (event) => {
+    // Prevent the browser from firing a 'click' event after this 'touchstart'
+    event.preventDefault();
+    // Call the same logic as a click
+    triggerParentOnClick();
   };
 
   const className = `key ${status} ${isLarge ? 'large' : ''}`;
@@ -14,8 +21,10 @@ function Key({ value, status = '', onClick, isLarge = false }) {
   return (
     <button
       className={className}
-      onClick={handleClick} // Standard click for mouse/accessibility
-      onTouchStart={handleClick} // Trigger immediately on touch
+      // onClick is still useful for mouse users and accessibility (e.g., keyboard activation)
+      onClick={triggerParentOnClick}
+      // onTouchStart handles the touch interaction and prevents the subsequent click
+      onTouchStart={handleTouchStart}
     >
       {value === 'BACKSPACE' ? '⌫' : value}
     </button>

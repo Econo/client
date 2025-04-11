@@ -1,9 +1,9 @@
 // client/src/components/GameSetup.js
 import React, { useState } from 'react';
-import axios from 'axios';
+// Import only the Set
+import { VALID_GUESSES_SET } from '../data/ValidGuesses';
 import './../App.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 const WORD_LENGTH = 5;
 
 function GameSetup({ onGameStart }) {
@@ -15,12 +15,12 @@ function GameSetup({ onGameStart }) {
     const word = e.target.value.toUpperCase();
     if (word.length <= WORD_LENGTH && /^[A-Z]*$/i.test(word)) {
          setCustomWord(word);
-         if (error) setError(''); // Clear error on valid input change
+         if (error) setError('');
     }
   };
 
   const validateAndStartCustom = () => {
-    setError(''); // Clear previous errors
+    setError('');
     if (customWord.length !== WORD_LENGTH) {
       setError(`Word must be exactly ${WORD_LENGTH} letters long.`);
       return;
@@ -29,7 +29,7 @@ function GameSetup({ onGameStart }) {
         setError('Word must contain only letters.');
         return;
     }
-    // Optional: Add check against VALID_GUESSES_SET here if you want custom words to be real words
+    // Optional: Add check against VALID_GUESSES_SET if custom words must be real words
     // if (!VALID_GUESSES_SET.has(customWord)) {
     //    setError('Custom word is not in the valid word list.');
     //    return;
@@ -38,24 +38,38 @@ function GameSetup({ onGameStart }) {
     onGameStart(customWord);
   };
 
-  const startWithRandomWord = async () => {
+  // --- Updated startWithRandomWord function using the Set ---
+  const startWithRandomWord = () => {
     setIsLoading(true);
     setError('');
-    try {
-      const response = await axios.get(`${API_BASE_URL}/words/random`);
-      if (response.data && response.data.word) {
-          onGameStart(response.data.word.toUpperCase());
-      } else {
-          setError('Received invalid word from server.');
-          setIsLoading(false);
-      }
-    } catch (err) {
-      console.error('Failed to fetch random word:', err);
-      setError('Could not fetch random word. Check server connection.');
-      setIsLoading(false);
+
+    if (!VALID_GUESSES_SET || VALID_GUESSES_SET.size === 0) {
+        setError('Word list is empty. Cannot start random game.');
+        setIsLoading(false);
+        return;
     }
-    // No need to set isLoading false here if onGameStart changes the view
+
+    // Convert the Set to an Array to allow random index access
+    const validGuessesArray = Array.from(VALID_GUESSES_SET);
+
+    // Select a random word from the newly created array
+    const randomIndex = Math.floor(Math.random() * validGuessesArray.length);
+    const randomWord = validGuessesArray[randomIndex];
+
+    // Ensure it's uppercase (it should be already if the Set contains uppercase words)
+    const finalWord = randomWord.toUpperCase();
+
+    // Simulate a brief delay if desired, otherwise call onGameStart directly
+    setTimeout(() => {
+        onGameStart(finalWord);
+        // No need to setIsLoading(false) if onGameStart changes the view
+    }, 100); // Small delay (e.g., 100ms) for visual feedback
+
+    // Or call directly without timeout:
+    // onGameStart(finalWord);
   };
+  // --- End Updated Function ---
+
 
   return (
     <div className="setup-screen">
@@ -63,14 +77,14 @@ function GameSetup({ onGameStart }) {
 
       <div>
         <button onClick={startWithRandomWord} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Start with Random Word'}
+          {isLoading ? 'Starting...' : 'Start with Random Word'}
         </button>
       </div>
 
       <div className="custom-word-section">
         <p>Or have one player enter a {WORD_LENGTH}-letter word:</p>
         <input
-          type="text" // Keep as text to see input
+          type="text"
           value={customWord}
           onChange={handleCustomWordChange}
           maxLength={WORD_LENGTH}
@@ -81,7 +95,7 @@ function GameSetup({ onGameStart }) {
           Start with Custom Word
         </button>
          <span className="warning">WARNING: Both players will see this word!</span>
-         <div className="error-message">{error || ''} </div> {/* Display error or nbsp to maintain height */}
+         <div className="error-message">{error || ''} </div>
       </div>
     </div>
   );
