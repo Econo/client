@@ -1,38 +1,499 @@
+/* client/src/App.css */
+:root {
+  --color-correct: #538d4e;
+  --color-present: #b59f3b;
+  --color-absent: #3a3a3c;
+  --color-empty-border: #565758;
+  --color-tile-text: #ffffff;
+  --color-key-bg: #818384;
+  --color-key-text: #ffffff;
+  --color-background: #121213;
+  --color-container-bg: #1a1a1b;
+  --tile-reveal-duration: 0.5s;
+  --tile-pop-duration: 0.1s;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-tile-text);
+  overscroll-behavior: none; /* Prevent pull-to-refresh */
+  touch-action: manipulation; /* Improve touch responsiveness, prevent zoom */
+}
+
 .App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.title {
+   font-size: clamp(1.5rem, 4vw, 2.2rem); /* Responsive font size */
+   font-weight: bold;
+   margin-bottom: 15px;
+   text-align: center;
+   letter-spacing: 0.1em;
+}
+
+/* --- Game Container --- */
+.game-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px; /* Max width for very large screens */
+  flex-grow: 1;
+  gap: clamp(5px, 1.5vw, 15px); /* Responsive gap */
+}
+
+.player-area {
+  flex: 1;
+  border: 1px solid var(--color-absent);
+  border-radius: 8px;
+  padding: clamp(10px, 2vw, 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--color-container-bg);
+  overflow: hidden; /* Important for layout */
+  position: relative; /* For absolute positioning of messages */
+}
+
+.player-area.inactive {
+    opacity: 0.6;
+    pointer-events: none; /* Disable interaction */
+}
+
+/* --- Messages --- */
+.message-container {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-height: 30px; /* Reserve space */
+    z-index: 10;
+}
+
+.message {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: black;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+    animation: fadeOut 2s forwards;
+    white-space: nowrap;
+}
+
+.final-solution {
   text-align: center;
+  margin-top: 20px; /* Space above the game over screen */
+  margin-bottom: -10px; /* Reduce space before game over screen if needed */
+  font-size: 1.1rem;
+  color: var(--color-tile-text); /* White text */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.final-solution strong {
+  color: var(--color-correct); /* Green for the word */
+  letter-spacing: 0.1em;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.game-over-popup-overlay {
+  position: fixed; /* Position relative to the viewport */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Dark semi-transparent background */
+  display: flex;
+  align-items: center; /* Vertical center */
+  justify-content: center; /* Horizontal center */
+  z-index: 1000; /* Ensure it's on top of everything */
+  animation: fadeIn 0.3s ease-out; /* Add fade-in animation */
+  padding: 20px; /* Add padding for smaller screens */
+  box-sizing: border-box;
+}
+
+.game-over-popup-content {
+  background-color: var(--color-container-bg); /* Use theme background */
+  padding: 30px 40px;
+  border-radius: 8px;
+  border: 1px solid var(--color-absent);
+  text-align: center;
+  color: var(--color-tile-text);
+  width: auto; /* Allow content to determine width */
+  max-width: 90%; /* Max width relative to screen */
+  min-width: 300px; /* Minimum width */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: scaleUp 0.3s ease-out; /* Add scale/fade-in animation */
+}
+
+.game-over-popup-content h2 {
+   margin-top: 0; /* Remove default top margin */
+   margin-bottom: 15px;
+   font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.game-over-popup-content h3 {
+    margin-bottom: 20px;
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+    color: var(--color-present); /* Yellowish for winner/draw message */
+}
+
+.game-over-popup-content .popup-solution {
+     margin-bottom: 30px;
+     font-size: clamp(1rem, 3vw, 1.2rem);
+}
+
+.game-over-popup-content .popup-solution strong {
+     color: var(--color-correct); /* Green for the solution */
+     letter-spacing: 0.1em;
+     background-color: rgba(0, 0, 0, 0.3);
+     padding: 3px 8px;
+     border-radius: 3px;
+     display: inline-block; /* Allows padding/background */
+}
+
+.game-over-popup-content button {
+   padding: 12px 25px;
+   font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+   cursor: pointer;
+   border: none;
+   border-radius: 4px;
+   background-color: var(--color-correct); /* Green */
+   color: white;
+   font-weight: bold;
+   transition: opacity 0.2s ease;
+   margin-top: 10px; /* Add some space above button */
+}
+
+.game-over-popup-content button:hover {
+   opacity: 0.9;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.solution-display {
+    position: absolute;
+    bottom: 10px; /* Position near bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9em;
+    color: var(--color-present);
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 3px 8px;
+    border-radius: 3px;
+    z-index: 5;
+}
+
+
+/* --- Grid & Tiles --- */
+.grid {
+  display: grid;
+  /* Updated for 10 rows */
+  grid-template-rows: repeat(10, 1fr);
+  grid-gap: 5px; /* Keep gap consistent */
+  padding: 5px; /* Reduce padding slightly for more space */
+  box-sizing: border-box;
+  margin-bottom: 15px; /* Adjust margin if needed */
+  width: clamp(220px, 80%, 300px); /* Slightly reduce max width if needed */
+  height: auto; /* Allow height to adjust */
+  /* Updated aspect ratio for 5 columns, 10 rows */
+  aspect-ratio: 5 / 10;
+  /* Increased max-height significantly */
+  max-height: 70vh; /* Use viewport height for better scaling */
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Stays 5 columns */
+  grid-gap: 5px;
+}
+
+.tile {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  /* Adjust font size slightly if tiles become too small */
+  font-size: clamp(1rem, 4vw, 1.6rem);
+  font-weight: bold;
+  line-height: 1;
+  text-transform: uppercase;
+  border: 2px solid var(--color-empty-border);
+  color: var(--color-tile-text); /* Ensure text color is set */
+  box-sizing: border-box;
+  user-select: none;
+  transition: transform 0.1s ease-in-out; /* For pop animation */
+}
+
+.tile.filled {
+   border-color: #878a8c;
+   animation: pop var(--tile-pop-duration) ease-in-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Animation States */
+.tile.reveal {
+    animation: flip var(--tile-reveal-duration) ease-in-out forwards;
+}
+
+/* Add delays for sequential flip */
+.tile.reveal:nth-child(1) { animation-delay: 0s; }
+.tile.reveal:nth-child(2) { animation-delay: 0.1s; }
+.tile.reveal:nth-child(3) { animation-delay: 0.2s; }
+.tile.reveal:nth-child(4) { animation-delay: 0.3s; }
+.tile.reveal:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  49% {
+    transform: rotateX(90deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+    /* Color changes happen via applied classes */
+  }
+  100% {
+    transform: rotateX(0deg);
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Final Tile Colors (applied with status class) */
+.tile.absent { background-color: var(--color-absent); border-color: var(--color-absent); }
+.tile.present { background-color: var(--color-present); border-color: var(--color-present); }
+.tile.correct { background-color: var(--color-correct); border-color: var(--color-correct); }
+
+/* Shake animation for invalid guess */
+.row.shake {
+  animation: shake 0.5s ease-in-out;
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+
+/* --- Keyboard --- */
+.keyboard {
+  width: 100%;
+  max-width: 500px; /* Limit keyboard width */
+  margin: 0 auto; /* Center keyboard */
+  user-select: none;
+}
+
+.keyboard-row {
+  display: flex;
+  width: 100%;
+  margin: 0 auto 5px; /* Reduced bottom margin */
+  touch-action: manipulation; /* Prevent zoom on double tap */
+  gap: clamp(3px, 1vw, 6px); /* Responsive gap */
+}
+/* Add padding for the middle row to align keys */
+.keyboard-row:nth-child(2) {
+   padding: 0 3%; /* Adjust percentage as needed */
+}
+
+
+.key {
+  font-family: inherit;
+  font-weight: bold;
+  border: 0;
+  padding: 0;
+  height: clamp(45px, 10vw, 58px); /* Responsive height */
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--color-key-bg);
+  color: var(--color-key-text);
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: rgba(255,255,255,0.3); /* Feedback on touch */
+  transition: background-color 0.1s ease;
+  font-size: clamp(0.8rem, 2.5vw, 1rem); /* Responsive font size */
+}
+
+.key:hover, .key:focus {
+  outline: none;
+  background-color: #9a9c9e; /* Slightly lighter on hover */
+}
+.key:active {
+   background-color: #b0b2b4; /* Even lighter when pressed */
+}
+
+.key.large {
+  flex: 1.5;
+  font-size: clamp(0.7rem, 2vw, 0.9rem); /* Slightly smaller for Enter/Bksp */
+}
+
+/* Keyboard Key Status Colors */
+.key.absent { background-color: var(--color-absent); color: var(--color-tile-text); }
+.key.present { background-color: var(--color-present); color: var(--color-tile-text); }
+.key.correct { background-color: var(--color-correct); color: var(--color-tile-text); }
+.key.absent:hover, .key.present:hover, .key.correct:hover {
+    opacity: 0.9; /* Dim slightly on hover when colored */
+}
+
+
+/* --- Setup & Game Over Screens --- */
+.setup-screen, .game-over-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 30px;
+  background-color: var(--color-container-bg);
+  border-radius: 8px;
+  margin-top: 50px;
+  text-align: center;
+  border: 1px solid var(--color-absent);
+  width: 90%;
+  max-width: 500px;
 }
 
-.App-link {
-  color: #61dafb;
+.setup-screen h2, .game-over-screen h2 {
+   margin-bottom: 20px;
+   font-size: clamp(1.3rem, 4vw, 1.8rem);
 }
+ .game-over-screen h3 {
+    margin-bottom: 15px;
+    font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+    color: var(--color-present); /* Yellowish for winner message */
+ }
+ .game-over-screen p {
+     margin-bottom: 25px;
+     font-size: clamp(1rem, 3vw, 1.2rem);
+ }
+ .game-over-screen strong {
+     color: var(--color-correct); /* Green for the solution */
+     letter-spacing: 0.1em;
+ }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+.setup-screen button, .game-over-screen button {
+   padding: 12px 25px;
+   font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+   margin: 10px;
+   cursor: pointer;
+   border: none;
+   border-radius: 4px;
+   background-color: var(--color-correct); /* Green */
+   color: white;
+   font-weight: bold;
+   transition: opacity 0.2s ease;
+}
+ .setup-screen button:hover, .game-over-screen button:hover {
+   opacity: 0.9;
+ }
+ .setup-screen button:disabled {
+     background-color: var(--color-absent);
+     cursor: not-allowed;
+     opacity: 0.7;
+ }
+
+.setup-screen input[type="text"] {
+    padding: 10px;
+    font-size: 1.1rem;
+    margin: 5px 0 10px 0;
+    width: 180px;
+    text-align: center;
+    text-transform: uppercase;
+    background-color: #ddd;
+    color: #333;
+    border: 2px solid var(--color-empty-border);
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+}
+ .setup-screen input[type="text"]::placeholder {
+     color: #888;
+     font-weight: normal;
+     letter-spacing: normal;
+     text-transform: none;
+ }
+
+ .custom-word-section {
+     margin-top: 25px;
+     padding-top: 20px;
+     border-top: 1px solid var(--color-absent);
+     width: 90%;
+ }
+ .warning {
+     color: var(--color-present);
+     font-size: 0.9em;
+     font-weight: bold;
+     margin-top: 5px;
+     display: block;
+ }
+ .error-message {
+     color: #ff5555; /* Red for errors */
+     font-size: 0.9em;
+     min-height: 1.2em; /* Reserve space */
+     margin-top: 5px;
+ }
+
+/* Media Query for very small screens */
+@media (max-width: 600px) {
+   .game-container {
+       /* Stacking might be necessary if 10 rows don't fit side-by-side */
+       /* flex-direction: column; */
+       /* gap: 20px; */
+   }
+   .player-area {
+        padding: 5px; /* Reduce padding */
+   }
+   .grid {
+       padding: 5px;
+       margin-bottom: 10px;
+       width: clamp(200px, 90%, 280px); /* Adjust width constraints */
+       max-height: 65vh; /* Adjust max height */
+   }
+   .tile {
+       font-size: clamp(0.9rem, 3.5vw, 1.4rem); /* Further adjust font size */
+   }
+   .keyboard {
+       max-width: 100%;
+   }
+   .key {
+       height: 40px; /* Smaller keys */
+   }
+   .title {
+       margin-bottom: 10px;
+   }
 }
